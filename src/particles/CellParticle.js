@@ -109,6 +109,10 @@ class CellParticle {
       py = this.y;
     }
 
-    g.rect(px, py, this.size, this.size);
+    if (this.cfg.tileShape === "circle") {
+      g.circle(px, py, this.size);
+    } else {
+      g.rect(px, py, this.size, this.size);
+    }
   }
 }

@@ -51,6 +51,7 @@ const PARAMS = {
   imgPath: IMAGE_OPTIONS["t1.jpg"],
 
   cellSize: 10,
+  tileShape: "rect",
   moveFrames: 180,
   maxSpeed: 2.8,
   snapToGrid: true,

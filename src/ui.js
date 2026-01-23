@@ -83,6 +83,19 @@ function initTweakpane() {
     step: 1,
   });
 
+  const bTileShape = paneParams.addBlade({
+    view: "list",
+    label: "TILE_SHAPE",
+    options: [
+      { text: "RECT", value: "rect" },
+      { text: "CIRCLE", value: "circle" },
+    ],
+    value: PARAMS.tileShape,
+  });
+  bTileShape.on("change", (ev) => {
+    PARAMS.tileShape = ev.value;
+  });
+
   paneParams.addBinding(PARAMS, "moveFrames", {
     label: "MOVE_FRAMES",
     step: 1,
@@ -299,6 +312,7 @@ function snapshotParams(p) {
     imgSource: String(p.imgSource === "upload" ? "upload" : "sample"),
     imgPath: String(p.imgPath),
     cellSize,
+    tileShape: String(p.tileShape === "circle" ? "circle" : "rect"),
     moveFrames,
     maxSpeed: Number.isFinite(maxSpeed) ? maxSpeed : 2.8,
     snapToGrid: !!p.snapToGrid,
