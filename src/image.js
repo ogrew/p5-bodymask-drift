@@ -19,7 +19,8 @@ function loadImageAsync(path) {
  * 画像に合わせて canvas / offscreen を作り直す
  */
 function setupCanvasesForImage(newImg) {
-  resizeCanvas(newImg.width, newImg.height);
+  const fitted = fitImageToWindow(newImg);
+  resizeCanvas(fitted.width, fitted.height);
   pixelDensity(1);
   rectMode(CENTER);
   noStroke();
@@ -27,7 +28,7 @@ function setupCanvasesForImage(newImg) {
   // 入力用
   srcG = createGraphics(width, height);
   srcG.pixelDensity(1);
-  srcG.image(newImg, 0, 0);
+  srcG.image(fitted, 0, 0);
 
   // 軌跡用
   trailG = createGraphics(width, height);
@@ -35,6 +36,8 @@ function setupCanvasesForImage(newImg) {
   trailG.rectMode(CENTER);
   trailG.noStroke();
   trailG.clear();
+
+  return fitted;
 }
 
 const UPLOAD_LIMIT_BYTES = 5 * 1024 * 1024;
@@ -90,4 +93,23 @@ function setUploadedFile(file) {
   UPLOAD_STATE.size = file.size;
 
   return { ok: true, message: "ok" };
+}
+
+/**
+ * 画像をウィンドウ内に収まるサイズへスケーリング
+ * - アスペクト比維持
+ * - 小さな画像はウィンドウに合わせて拡大
+ */
+function fitImageToWindow(im) {
+  const maxW = Math.max(1, Math.floor(window.innerWidth || im.width));
+  const maxH = Math.max(1, Math.floor(window.innerHeight || im.height));
+  const scale = Math.min(maxW / im.width, maxH / im.height);
+  const w = Math.max(1, Math.floor(im.width * scale));
+  const h = Math.max(1, Math.floor(im.height * scale));
+
+  if (w === im.width && h === im.height) return im;
+
+  const resized = im.get();
+  resized.resize(w, h);
+  return resized;
 }

@@ -9,6 +9,7 @@ function preload() {
 
 function setup() {
   pixelDensity(1);
+  img = fitImageToWindow(img);
   createCanvas(img.width, img.height);
   rectMode(CENTER);
   noStroke();

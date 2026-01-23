@@ -237,8 +237,7 @@ function onPlay() {
       if (!isRunAlive(run, runToken)) return;
 
       // 画像に合わせて canvas / offscreen を作り直す
-      img = loaded;
-      setupCanvasesForImage(img);
+      img = setupCanvasesForImage(loaded);
 
       // 推論開始
       setStatus("SEGMENTING", "running segmentation...", "");
