@@ -101,8 +101,15 @@ function setUploadedFile(file) {
  * - 小さな画像はウィンドウに合わせて拡大
  */
 function fitImageToWindow(im) {
-  const maxW = Math.max(1, Math.floor(window.innerWidth || im.width));
-  const maxH = Math.max(1, Math.floor(window.innerHeight || im.height));
+  const bounds = getStageBounds();
+  const maxW = Math.max(
+    1,
+    Math.floor(bounds?.width || window.innerWidth || im.width)
+  );
+  const maxH = Math.max(
+    1,
+    Math.floor(bounds?.height || window.innerHeight || im.height)
+  );
   const scale = Math.min(maxW / im.width, maxH / im.height);
   const w = Math.max(1, Math.floor(im.width * scale));
   const h = Math.max(1, Math.floor(im.height * scale));
@@ -112,4 +119,12 @@ function fitImageToWindow(im) {
   const resized = im.get();
   resized.resize(w, h);
   return resized;
+}
+
+function getStageBounds() {
+  const stage = document.getElementById("stage");
+  if (!stage) return null;
+  const rect = stage.getBoundingClientRect();
+  if (!rect || !rect.width || !rect.height) return null;
+  return rect;
 }

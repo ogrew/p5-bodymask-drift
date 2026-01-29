@@ -32,23 +32,12 @@ const BUILD_CELLS_PER_FRAME = 4000;
 // UI パラメータ（paneParamsで編集）
 // ============================================================
 
-const IMAGE_OPTIONS = {
-  "t0.jpg": "assets/t0.jpg",
-  "t1.jpg": "assets/t1.jpg",
-  "t2.jpg": "assets/t2.jpg",
-  "t3.jpg": "assets/t3.jpg",
-  "t4.jpg": "assets/t4.jpg",
-  "t5.jpg": "assets/t5.jpg",
-};
-
-const IMG_SOURCE_OPTIONS = {
-  "SAMPLE (assets)": "sample",
-  "UPLOAD (local jpeg)": "upload",
-};
+const SAMPLE_MANIFEST_URL = "assets/samples/manifest.json";
+const DEFAULT_SAMPLE_PATH = "assets/samples/t1.jpg";
 
 const PARAMS = {
   imgSource: "sample",
-  imgPath: IMAGE_OPTIONS["t1.jpg"],
+  imgPath: DEFAULT_SAMPLE_PATH,
 
   cellSize: 10,
   tileShape: "rect",

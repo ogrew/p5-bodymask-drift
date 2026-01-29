@@ -10,7 +10,8 @@ function preload() {
 function setup() {
   pixelDensity(1);
   img = fitImageToWindow(img);
-  createCanvas(img.width, img.height);
+  const canvas = createCanvas(img.width, img.height);
+  canvas.parent("canvas-wrap");
   rectMode(CENTER);
   noStroke();
 

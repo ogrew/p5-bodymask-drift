@@ -2,8 +2,13 @@
 // UI / 実行制御
 // ============================================================
 
+let layoutReady = false;
+let externalUiLocked = false;
+let uploadInputBound = false;
+let sampleManifest = [];
+
 /**
- * Tweakpaneを初期化（paneRun / paneParams の2ペイン）
+ * Tweakpaneを初期化（Paramsペインのみ）
  */
 function initTweakpane() {
   const PaneCtor =
@@ -14,81 +19,30 @@ function initTweakpane() {
     return;
   }
 
-  const containers = ensurePaneContainers();
+  initLayoutUI();
 
-  try {
-    paneRun?.dispose?.();
-  } catch (_) {}
+  const container = ensurePaneContainer();
+
   try {
     paneParams?.dispose?.();
   } catch (_) {}
 
-  paneRun = new PaneCtor({ title: "Run", container: containers.run });
-  paneParams = new PaneCtor({ title: "Params", container: containers.params });
+  paneParams = new PaneCtor({ title: "Params", container });
 
-  // --- Run: 状態表示
-  paneRun.addBinding(RUN_UI, "status", { label: "STATUS", readonly: true });
-  paneRun.addBinding(RUN_UI, "detail", { label: "DETAIL", readonly: true });
-  paneRun.addBinding(RUN_UI, "progress", { label: "PROGRESS", readonly: true });
-
-  // --- Run: ボタン
-  btnPlay = paneRun.addButton({ title: "PLAY" });
-  btnStop = paneRun.addButton({ title: "STOP" });
-
-  btnPlay.on("click", () => onPlay());
-  btnStop.on("click", () => onStop());
-
-  btnStop.disabled = true;
-
-  // --- Params: 画像入力方法
-  bImgSource = paneParams.addBinding(PARAMS, "imgSource", {
-    label: "IMG_SOURCE",
-    options: {
-        SAMPLE: "sample",
-        UPLOAD: "upload",
-    },
-  });
-
-  // サンプル画像
-  bSampleImage = paneParams.addBinding(PARAMS, "imgPath", {
-    label: "SAMPLE_IMAGE",
-    options: IMAGE_OPTIONS,
-  });
-
-  // アップロード画像
-  bUploadImage = paneParams.addBinding(UPLOAD_UI, "file", {
-    label: "UPLOAD_IMAGE",
-    readonly: true,
-  });
-
-  btnChooseJpeg = paneParams.addButton({ title: "CHOOSE_JPEG..." });
-  btnChooseJpeg.on("click", () => {
-    const el = ensureUploadInput();
-    try { el.value = ""; } catch (_) {}
-    el.click();
-  });
-
-  // IMG_SOURCE が変わったら相互排他を更新
-  bImgSource.on("change", () => {
-    syncImageSourceUI();
-  });
-
-  // 初期表示
-  UPLOAD_UI.file = getUploadedLabel();  
-
-  paneParams.addBinding(PARAMS, "cellSize", {
-    label: "CELL_SIZE",
+  const tiles = paneParams.addFolder({ title: "Tiles", expanded: true });
+  tiles.addBinding(PARAMS, "cellSize", {
+    label: "Cell Size (px)",
     min: 1,
     max: 50,
     step: 1,
   });
 
-  const bTileShape = paneParams.addBlade({
+  const bTileShape = tiles.addBlade({
     view: "list",
-    label: "TILE_SHAPE",
+    label: "Tile Shape",
     options: [
-      { text: "RECT", value: "rect" },
-      { text: "CIRCLE", value: "circle" },
+      { text: "Rectangle", value: "rect" },
+      { text: "Circle", value: "circle" },
     ],
     value: PARAMS.tileShape,
   });
@@ -96,68 +50,67 @@ function initTweakpane() {
     PARAMS.tileShape = ev.value;
   });
 
-  paneParams.addBinding(PARAMS, "moveFrames", {
-    label: "MOVE_FRAMES",
-    step: 1,
-  });
-
-  paneParams.addBinding(PARAMS, "maxSpeed", {
-    label: "MAX_SPEED",
-    min: 1.0,
-    max: 10.0,
-    step: 0.1,
-  });
-
-  paneParams.addBinding(PARAMS, "snapToGrid", { label: "SNAP_TO_GRID" });
-  paneParams.addBinding(PARAMS, "applyToPerson", { label: "APPLY_TO_PERSON" });
-
-  paneParams.addBinding(PARAMS, "flowFreq", {
-    label: "FLOW_FREQ",
-    min: 0.001,
-    max: 0.1,
-    step: 0.001,
-  });
-
-  paneParams.addBinding(PARAMS, "flowTwist", {
-    label: "FLOW_TWIST",
-    min: 0.1,
-    max: 10.0,
-    step: 0.1,
-  });
-
-  paneParams.addBinding(PARAMS, "flowZSpeed", {
-    label: "FLOW_Z_SPEED",
-    min: 0.001,
-    max: 1.0,
-    step: 0.001,
-  });
-
-  paneParams.addBinding(PARAMS, "force", {
-    label: "FORCE",
-    min: 0.01,
-    max: 5.0,
-    step: 0.01,
-  });
-
-  paneParams.addBinding(PARAMS, "tileAlpha", {
-    label: "TILE_ALPHA",
+  tiles.addBinding(PARAMS, "tileAlpha", {
+    label: "Tile Opacity",
     min: 0.0,
     max: 1.0,
     step: 0.01,
   });
 
-  paneParams.addBinding(PARAMS, "noiseSeed", {
-    label: "NOISE_SEED",
+  const motion = paneParams.addFolder({ title: "Motion", expanded: false });
+  motion.addBinding(PARAMS, "moveFrames", {
+    label: "Frames (steps)",
+    step: 1,
+  });
+  motion.addBinding(PARAMS, "maxSpeed", {
+    label: "Max Speed",
+    min: 1.0,
+    max: 10.0,
+    step: 0.1,
+  });
+
+  const flow = paneParams.addFolder({ title: "Flow Field", expanded: false });
+  flow.addBinding(PARAMS, "flowFreq", {
+    label: "Frequency",
+    min: 0.001,
+    max: 0.1,
+    step: 0.001,
+  });
+  flow.addBinding(PARAMS, "flowTwist", {
+    label: "Twist",
+    min: 0.1,
+    max: 10.0,
+    step: 0.1,
+  });
+  flow.addBinding(PARAMS, "flowZSpeed", {
+    label: "Z Speed",
+    min: 0.001,
+    max: 1.0,
+    step: 0.001,
+  });
+
+  const behavior = paneParams.addFolder({ title: "Behavior", expanded: false });
+  behavior.addBinding(PARAMS, "force", {
+    label: "Force Strength",
+    min: 0.01,
+    max: 5.0,
+    step: 0.01,
+  });
+  behavior.addBinding(PARAMS, "snapToGrid", { label: "Snap to Grid" });
+  behavior.addBinding(PARAMS, "wrapEdges", { label: "Wrap Edges" });
+  behavior.addBinding(PARAMS, "applyToPerson", { label: "Apply to Person" });
+
+  const randomness = paneParams.addFolder({ title: "Randomness", expanded: false });
+  randomness.addBinding(PARAMS, "noiseSeed", {
+    label: "Noise Seed",
     step: 1,
   });
 
-  paneParams.addBinding(PARAMS, "wrapEdges", {
-    label: "WRAP_EDGES",
-  });  
+  syncImageSourceUI();
+  updateUploadLabel();
 
   setParamsLocked(false);
 
-  paneRun.refresh();
   paneParams.refresh();
 }
 
@@ -167,15 +120,13 @@ function initTweakpane() {
 function setParamsLocked(locked) {
   // Paramsペインは実行中ロック
   if (paneParams) paneParams.disabled = locked;
+  setExternalControlsLocked(locked);
 
   // Play/Stopの有効・無効を確実に反映
   const canPlay = !locked && !!modelReady && !!bodySeg;
   if (btnPlay) btnPlay.disabled = !canPlay;
   if (btnStop) btnStop.disabled = !locked;
 
-  // 念のため：ファイル選択ボタンもロック（paneParams.disabled が効かないケース対策）
-  if (btnPickUpload) btnPickUpload.disabled = locked;
-  try { paneRun?.refresh?.(); } catch (_) {}
   try { paneParams?.refresh?.(); } catch (_) {}
 }
 
@@ -352,7 +303,7 @@ function finalizeToIdle(reason) {
  * Runペインの表示更新
  */
 function refreshRunPane() {
-  if (paneRun) paneRun.refresh();
+  updateStatusDom();
 }
 
 /**
@@ -362,6 +313,7 @@ function setStatus(status, detail, progress) {
   RUN_UI.status = status;
   RUN_UI.detail = detail ?? "";
   RUN_UI.progress = progress ?? "";
+  updateStatusDom();
 }
 
 /**
@@ -376,8 +328,249 @@ function setRunError(message) {
   redraw();
 }
 
-function ensurePaneContainers() {
-  const parentId = "tp-stack";
+async function fetchSampleManifest() {
+  try {
+    const response = await fetch(SAMPLE_MANIFEST_URL, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Manifest not found: ${response.status}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data.samples) ? data.samples : [];
+  } catch (error) {
+    console.warn("Failed to load sample manifest", error);
+    return [];
+  }
+}
+
+async function reloadSampleManifest() {
+  const samples = await fetchSampleManifest();
+  applySampleManifest(samples);
+}
+
+function applySampleManifest(samples) {
+  sampleManifest = samples.filter((sample) => sample?.file);
+  const sampleSelect = document.getElementById("sampleSelect");
+  const refreshSamples = document.getElementById("refreshSamples");
+
+  if (!sampleSelect) return;
+
+  if (!sampleManifest.length) {
+    sampleSelect.innerHTML = "";
+    const option = document.createElement("option");
+    option.textContent = "No samples found";
+    sampleSelect.appendChild(option);
+    sampleSelect.disabled = true;
+    if (refreshSamples) refreshSamples.disabled = false;
+    updateImageControlsUI();
+    return;
+  }
+
+  sampleSelect.disabled = false;
+  populateSampleSelect(sampleSelect, sampleManifest);
+
+  const exists = sampleManifest.some(
+    (sample) => sample.file === PARAMS.imgPath
+  );
+  if (!exists) {
+    PARAMS.imgPath = sampleManifest[0].file;
+  }
+
+  syncSampleSelectValue(sampleSelect, sampleManifest);
+  paneParams?.refresh?.();
+  updateImageControlsUI();
+}
+
+function initLayoutUI() {
+  if (layoutReady) return;
+  const ui = document.getElementById("ui");
+  if (!ui) return;
+  layoutReady = true;
+
+  const toggleButton = document.getElementById("togglePanel");
+  if (toggleButton) {
+    const updateToggle = (isCollapsed) => {
+      toggleButton.textContent = isCollapsed ? "Show Panel" : "Hide Panel";
+    };
+    updateToggle(ui.classList.contains("is-collapsed"));
+    toggleButton.addEventListener("click", () => {
+      const isCollapsed = ui.classList.toggle("is-collapsed");
+      updateToggle(isCollapsed);
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    if (tag === "input" || tag === "textarea" || document.activeElement?.isContentEditable) {
+      return;
+    }
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key.toLowerCase() !== "p") return;
+    event.preventDefault();
+    const isCollapsed = ui.classList.toggle("is-collapsed");
+    if (toggleButton) {
+      toggleButton.textContent = isCollapsed ? "Show Panel" : "Hide Panel";
+    }
+  });
+
+  btnPlay = document.getElementById("playButton");
+  btnStop = document.getElementById("stopButton");
+  if (btnPlay) btnPlay.addEventListener("click", () => onPlay());
+  if (btnStop) btnStop.addEventListener("click", () => onStop());
+
+  const sampleSelect = document.getElementById("sampleSelect");
+  const refreshSamples = document.getElementById("refreshSamples");
+  if (sampleSelect) {
+    sampleSelect.addEventListener("change", () => {
+      const selected = sampleSelect.value;
+      if (selected) {
+        PARAMS.imgPath = selected;
+      }
+      PARAMS.imgSource = "sample";
+      syncImageSourceUI();
+      paneParams?.refresh?.();
+    });
+  }
+  if (refreshSamples) {
+    refreshSamples.addEventListener("click", () => {
+      if (!sampleSelect) return;
+      reloadSampleManifest();
+    });
+  }
+
+  const fileInput = ensureUploadInput();
+  const dropZone = document.getElementById("dropZone");
+  if (dropZone) {
+    const setDrag = (active) => {
+      dropZone.classList.toggle("is-dragover", active);
+    };
+
+    dropZone.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      setDrag(true);
+    });
+
+    dropZone.addEventListener("dragleave", () => setDrag(false));
+    dropZone.addEventListener("drop", (event) => {
+      event.preventDefault();
+      setDrag(false);
+      const file = event.dataTransfer?.files?.[0];
+      if (file) {
+        handleUploadFile(file, fileInput);
+      }
+    });
+
+    dropZone.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        fileInput?.click();
+      }
+    });
+  }
+
+  reloadSampleManifest();
+  updateImageControlsUI();
+  updateUploadLabel();
+  updateStatusDom();
+}
+
+function updateStatusDom() {
+  const statusEl = document.getElementById("statusValue");
+  const detailEl = document.getElementById("detailValue");
+  const progressEl = document.getElementById("progressValue");
+  if (!statusEl || !detailEl || !progressEl) return;
+
+  statusEl.textContent = RUN_UI.status || "";
+  detailEl.textContent = RUN_UI.detail || "";
+  progressEl.textContent = RUN_UI.progress || "";
+
+  statusEl.classList.remove("is-success", "is-error");
+  if (RUN_UI.status === "ERROR") {
+    statusEl.classList.add("is-error");
+    return;
+  }
+  if (RUN_UI.status === "DONE" || RUN_UI.status === "IDLE") {
+    statusEl.classList.add("is-success");
+  }
+}
+
+function setExternalControlsLocked(locked) {
+  externalUiLocked = locked;
+  updateImageControlsUI();
+}
+
+function updateImageControlsUI() {
+  const sampleSelect = document.getElementById("sampleSelect");
+  const refreshSamples = document.getElementById("refreshSamples");
+  const dropZone = document.getElementById("dropZone");
+  const fileInput = document.getElementById("fileInput");
+
+  const disabled = externalUiLocked;
+  const noSamples = sampleManifest.length === 0;
+
+  if (sampleSelect) sampleSelect.disabled = disabled || noSamples;
+  if (refreshSamples) refreshSamples.disabled = disabled;
+  if (fileInput) fileInput.disabled = disabled;
+  if (dropZone) {
+    dropZone.classList.toggle("is-disabled", disabled);
+  }
+}
+
+function populateSampleSelect(selectEl, samples = sampleManifest) {
+  selectEl.innerHTML = "";
+  samples.forEach((sample) => {
+    if (!sample?.file) return;
+    const option = document.createElement("option");
+    option.value = sample.file;
+    option.textContent = sample.label || getSampleLabelFromPath(sample.file);
+    selectEl.appendChild(option);
+  });
+}
+
+function syncSampleSelectValue(selectEl, samples = sampleManifest) {
+  if (!PARAMS.imgPath) return;
+  const match = samples.find((sample) => sample.file === PARAMS.imgPath);
+  if (match) {
+    selectEl.value = match.file;
+  }
+}
+
+function getSampleLabelFromPath(path) {
+  if (!path) return "";
+  const parts = path.split("/");
+  return parts[parts.length - 1] || path;
+}
+
+function updateUploadLabel(message) {
+  const label = message ?? getUploadedLabel();
+  const textEl = document.querySelector("#dropZone .drop-zone-text");
+  if (textEl) {
+    const text =
+      label && label !== "(none)" ? label : "Drop file or click to browse";
+    textEl.textContent = text;
+  }
+}
+
+function handleUploadFile(file, inputEl) {
+  const r = setUploadedFile(file);
+  if (!r.ok) {
+    try {
+      if (inputEl) inputEl.value = "";
+    } catch (_) {}
+    UPLOAD_UI.file = `ERROR: ${r.message}`;
+    updateUploadLabel(UPLOAD_UI.file);
+    paneParams?.refresh?.();
+    return;
+  }
+
+  UPLOAD_UI.file = getUploadedLabel();
+  PARAMS.imgSource = "upload";
+  updateUploadLabel(UPLOAD_UI.file);
+  syncImageSourceUI();
+  paneParams?.refresh?.();
+}
+
+function ensurePaneContainer() {
+  const parentId = "pane";
   let parent = document.getElementById(parentId);
   if (!parent) {
     parent = document.createElement("div");
@@ -385,72 +578,37 @@ function ensurePaneContainers() {
     document.body.appendChild(parent);
   }
 
-  // 右上固定＆縦積み
-  parent.style.position = "fixed";
-  parent.style.top = "10px";
-  parent.style.right = "10px";
-  parent.style.zIndex = "99999";
-  parent.style.display = "flex";
-  parent.style.flexDirection = "column";
-  parent.style.gap = "10px"; // RunとParamsの間隔
-  parent.style.alignItems = "flex-end";
-  parent.style.pointerEvents = "auto";
+  parent.innerHTML = "";
 
-  // 子コンテナ（Run / Params）を親の下にぶら下げる
-  const makeChild = (id) => {
-    let el = document.getElementById(id);
-    if (!el) {
-      el = document.createElement("div");
-      el.id = id;
-    }
-    // もし別の場所に居てもここに移動
-    parent.appendChild(el);
-
-    // 幅は好みで（Tweakpaneは中身に合わせて伸びるけど、ここで固定すると安定）
-    el.style.width = "360px";
-
-    // 再初期化時に中身が残らないように
-    el.innerHTML = "";
-    return el;
-  };
-
-  return {
-    run: makeChild("tp-run"),
-    params: makeChild("tp-params"),
-  };
+  const el = document.createElement("div");
+  el.id = "tp-params";
+  el.style.width = "100%";
+  parent.appendChild(el);
+  return el;
 }
 
 let uploadInputEl = null;
-let btnPickUpload = null;
 
 function ensureUploadInput() {
   if (uploadInputEl) return uploadInputEl;
 
-  const el = document.createElement("input");
-  el.type = "file";
-  el.accept = ".jpg,.jpeg,image/jpeg";
-  el.style.display = "none";
-  document.body.appendChild(el);
+  const existing = document.getElementById("fileInput");
+  const el = existing ?? document.createElement("input");
+  if (!existing) {
+    el.type = "file";
+    el.accept = ".jpg,.jpeg,image/jpeg";
+    el.style.display = "none";
+    document.body.appendChild(el);
+  }
 
-  el.addEventListener("change", () => {
-    const file = el.files && el.files[0] ? el.files[0] : null;
-    if (!file) return;
-
-    const r = setUploadedFile(file);
-    if (!r.ok) {
-      // 失敗：選択をクリアしてメッセージだけ残す
-      try { el.value = ""; } catch (_) {}
-      UPLOAD_UI.file = `ERROR: ${r.message}`;
-      paneParams?.refresh?.();
-      return;
-    }
-
-    // 成功：ラベル更新＋sourceをuploadへ寄せる（任意だが自然）
-    UPLOAD_UI.file = getUploadedLabel();
-    PARAMS.imgSource = "upload";
-
-    paneParams?.refresh?.();
-  });
+  if (!uploadInputBound) {
+    el.addEventListener("change", () => {
+      const file = el.files && el.files[0] ? el.files[0] : null;
+      if (!file) return;
+      handleUploadFile(file, el);
+    });
+    uploadInputBound = true;
+  }
 
   uploadInputEl = el;
   return uploadInputEl;
@@ -462,14 +620,7 @@ function ensureUploadInput() {
  * - UPLOAD: UPLOAD_IMAGE と CHOOSE_JPEG 有効 / SAMPLE_IMAGE 無効
  */
 function syncImageSourceUI() {
-  const useSample = PARAMS.imgSource === "sample"; // ←あなたのenumに合わせてください
-
-  // SAMPLE_IMAGE
-  if (bSampleImage) bSampleImage.disabled = !useSample;
-
-  // UPLOAD_IMAGE（readonly表示） + CHOOSEボタン
-  if (bUploadImage) bUploadImage.disabled = useSample;
-  if (btnChooseJpeg) btnChooseJpeg.disabled = useSample;
+  updateImageControlsUI();
 
   // 念のため反映
   try {
