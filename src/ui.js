@@ -660,7 +660,7 @@ function ensureUploadInput() {
   const el = existing ?? document.createElement("input");
   if (!existing) {
     el.type = "file";
-    el.accept = ".jpg,.jpeg,image/jpeg";
+    el.accept = ".jpg,.jpeg,.png,image/jpeg,image/png";
     el.style.display = "none";
     document.body.appendChild(el);
   }

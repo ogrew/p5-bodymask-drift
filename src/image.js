@@ -61,7 +61,7 @@ function getUploadedLabel() {
 }
 
 /**
- * JPEGのみ / 5MBまで
+ * JPG/PNGのみ / 5MBまで
  * okなら objectURL を更新（古いURLは revoke）
  */
 function setUploadedFile(file) {
@@ -70,11 +70,15 @@ function setUploadedFile(file) {
   // type はブラウザにより空のことがあるので、拡張子でも保険をかける
   const name = String(file.name ?? "");
   const lower = name.toLowerCase();
-  const extOk = lower.endsWith(".jpg") || lower.endsWith(".jpeg");
-  const typeOk = file.type === "image/jpeg" || file.type === "";
+  const extOk =
+    lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png");
+  const typeOk =
+    file.type === "image/jpeg" ||
+    file.type === "image/png" ||
+    file.type === "";
 
   if (!(extOk && typeOk)) {
-    return { ok: false, message: "JPEG (.jpg/.jpeg) only" };
+    return { ok: false, message: "JPG/PNG only" };
   }
 
   if (file.size > UPLOAD_LIMIT_BYTES) {
