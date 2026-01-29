@@ -28,7 +28,7 @@ function initTweakpane() {
     paneParams?.dispose?.();
   } catch (_) {}
 
-  paneParams = new PaneCtor({ title: "Params", container });
+  paneParams = new PaneCtor({ title: "Params", container, expanded: false });
 
   const tiles = paneParams.addFolder({ title: "Tiles", expanded: true });
   tiles.addBinding(PARAMS, "cellSize", {
