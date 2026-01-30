@@ -510,6 +510,7 @@ function initLayoutUI() {
       PARAMS.imgSource = "sample";
       syncImageSourceUI();
       paneParams?.refresh?.();
+      reloadSampleManifest();
     });
   }
   if (refreshSamples) {
