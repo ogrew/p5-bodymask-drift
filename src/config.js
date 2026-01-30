@@ -33,7 +33,7 @@ const BUILD_CELLS_PER_FRAME = 4000;
 // ============================================================
 
 const SAMPLE_MANIFEST_URL = "assets/samples/manifest.json";
-const DEFAULT_SAMPLE_PATH = "assets/samples/t1.jpg";
+const DEFAULT_SAMPLE_PATH = "assets/samples/p001.png";
 
 const PARAM_DEFAULTS = {
   imgSource: "sample",
@@ -41,12 +41,12 @@ const PARAM_DEFAULTS = {
 
   cellSize: 6,
   tileShape: "rect",
-  moveFrames: 180,
-  maxSpeed: 2.8,
+  moveFrames: 120,
+  maxSpeed: 1.6,
   snapToGrid: true,
   applyToPerson: true,
 
-  flowFreq: 0.08,
+  flowFreq: 0.12,
   flowTwist: 2.0,
   flowZSpeed: 0.1,
   force: 0.2,
