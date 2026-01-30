@@ -8,6 +8,16 @@ let uploadInputBound = false;
 let sampleManifest = [];
 let didSelectInitialSample = false;
 
+function setEmptyVisible(isVisible) {
+  const emptyState = document.getElementById("empty-state");
+  if (!emptyState) return;
+  emptyState.classList.toggle("is-visible", !!isVisible);
+}
+
+function syncEmptyState() {
+  setEmptyVisible(!baseImgOriginal);
+}
+
 /**
  * Tweakpaneを初期化（Paramsペインのみ）
  */
@@ -209,6 +219,7 @@ function onPlay() {
 
       // 画像に合わせて canvas / offscreen を作り直す
       img = setupCanvasesForImage(loaded);
+      syncEmptyState();
 
       // 推論開始
       setStatus("SEGMENTING", "running segmentation...", "");
@@ -438,6 +449,7 @@ function applySampleManifest(samples) {
     loadImageAsync(PARAMS.imgPath)
       .then((loaded) => {
         img = setupCanvasesForImage(loaded);
+        syncEmptyState();
         redraw();
       })
       .catch(() => {});
@@ -541,6 +553,7 @@ function initLayoutUI() {
   updateImageControlsUI();
   updateUploadLabel();
   updateStatusDom();
+  syncEmptyState();
 }
 
 function updateStatusDom() {

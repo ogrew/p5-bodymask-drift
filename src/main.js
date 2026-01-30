@@ -3,33 +3,59 @@
 // ============================================================
 
 function preload() {
-  // 初期表示用にデフォルト画像だけ読み込む（選択変更はPLAY時にロード）
-  img = loadImage(PARAMS.imgPath);
+  // 初期表示は空状態にして、サンプルはマニフェスト読み込み後に選択する
 }
 
 function setup() {
   pixelDensity(1);
-  baseImgOriginal = img;
-  img = fitImageToWindow(img);
-  const canvas = createCanvas(img.width, img.height);
-  canvas.parent("canvas-wrap");
-  rectMode(CENTER);
-  noStroke();
+  if (img) {
+    baseImgOriginal = img;
+    img = fitImageToWindow(img);
+    const canvas = createCanvas(img.width, img.height);
+    canvas.parent("canvas-wrap");
+    rectMode(CENTER);
+    noStroke();
 
-  // 推論入力は CanvasImageSource に寄せる
-  srcG = createGraphics(img.width, img.height);
-  srcG.pixelDensity(1);
-  srcG.image(img, 0, 0);
+    // 推論入力は CanvasImageSource に寄せる
+    srcG = createGraphics(img.width, img.height);
+    srcG.pixelDensity(1);
+    srcG.image(img, 0, 0);
 
-  // 軌跡レイヤー
-  trailG = createGraphics(width, height);
-  trailG.pixelDensity(1);
-  trailG.rectMode(CENTER);
-  trailG.noStroke();
-  trailG.clear();
+    // 軌跡レイヤー
+    trailG = createGraphics(width, height);
+    trailG.pixelDensity(1);
+    trailG.rectMode(CENTER);
+    trailG.noStroke();
+    trailG.clear();
+  } else {
+    const initial = getInitialCanvasSize();
+    const canvas = createCanvas(initial.width, initial.height);
+    canvas.parent("canvas-wrap");
+    rectMode(CENTER);
+    noStroke();
+
+    const blank = createGraphics(initial.width, initial.height);
+    blank.pixelDensity(1);
+    blank.background(255);
+    img = blank;
+    baseImgOriginal = null;
+
+    srcG = createGraphics(initial.width, initial.height);
+    srcG.pixelDensity(1);
+    srcG.background(255);
+
+    trailG = createGraphics(initial.width, initial.height);
+    trailG.pixelDensity(1);
+    trailG.rectMode(CENTER);
+    trailG.noStroke();
+    trailG.clear();
+  }
 
   // UI構築
   initTweakpane();
+  if (typeof syncEmptyState === "function") {
+    syncEmptyState();
+  }
 
   // モデルロード開始（非同期）
   setStatus("LOADING_MODEL", "ml5 model loading...", "");
@@ -66,7 +92,7 @@ function windowResized() {
 }
 
 function draw() {
-  if (DRAW_BASE_IMAGE) {
+  if (DRAW_BASE_IMAGE && img) {
     image(img, 0, 0);
   } else {
     background(0);
@@ -142,4 +168,13 @@ function draw() {
   }
 
   drawStatusOverlay();
+}
+
+function getInitialCanvasSize() {
+  const bounds = getStageBounds();
+  const maxW = bounds?.width || window.innerWidth || 960;
+  const maxH = bounds?.height || window.innerHeight || 640;
+  const width = Math.max(240, Math.min(960, Math.floor(maxW)));
+  const height = Math.max(240, Math.min(640, Math.floor(maxH)));
+  return { width, height };
 }
