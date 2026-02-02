@@ -2,14 +2,6 @@
 // 固定設定
 // ============================================================
 
-// Flow Field
-const FLOW_FREQ = 0.08; // ノイズ周波数
-const FLOW_TWIST = 2.0; // 回転量倍率
-const FLOW_Z_SPEED = 0.01; // 時間方向
-
-// 粒子（セル）の移動
-const FORCE = 0.35;
-
 // 描画
 const DRAW_BASE_IMAGE = true;
 
