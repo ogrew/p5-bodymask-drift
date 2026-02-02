@@ -67,6 +67,12 @@ function initTweakpane() {
     max: 1.0,
     step: 0.01,
   });
+  tiles.addBinding(PARAMS, "tileScale", {
+    label: "Tile Scale (end)",
+    min: 0.0,
+    max: 3.0,
+    step: 0.01,
+  });
 
   const motion = paneParams.addFolder({ title: "Motion", expanded: false });
   motion.addBinding(PARAMS, "moveFrames", {
@@ -275,6 +281,7 @@ function snapshotParams(p) {
   const force = Number(p.force);
 
   const tileAlpha = Number(p.tileAlpha);
+  const tileScale = Number(p.tileScale);
   const noiseSeed = clampInt(Math.floor(Number(p.noiseSeed) || 1), 1, 100000);
 
   return {
@@ -293,6 +300,7 @@ function snapshotParams(p) {
     force: clampNumber(Number.isFinite(force) ? force : 0.2, 0.01, 5.0),
 
     tileAlpha: clampNumber(Number.isFinite(tileAlpha) ? tileAlpha : 1.0, 0.0, 1.0),
+    tileScale: clampNumber(Number.isFinite(tileScale) ? tileScale : 1.0, 0.0, 3.0),
     noiseSeed: noiseSeed,
     wrapEdges: !!p.wrapEdges,
   };

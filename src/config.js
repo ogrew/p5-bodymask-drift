@@ -44,6 +44,7 @@ const PARAM_DEFAULTS = {
   force: 0.2,
 
   tileAlpha: 1.0,
+  tileScale: 1.0,
 
   noiseSeed: Math.floor(Math.random() * 100000) + 1,
   wrapEdges: true,

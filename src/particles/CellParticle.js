@@ -36,6 +36,7 @@ class CellParticle {
     this.maxSpeedScale = random(0.7, 1.3);
 
     this.fade = 255;
+    this.scale = 1.0;
 
     this.dead = false;
   }
@@ -64,6 +65,8 @@ class CellParticle {
 
     // フェード
     this.fade = map(this.age, 0, this.life, 255, 255 * this.cfg.tileAlpha);
+    const endScale = Number.isFinite(this.cfg.tileScale) ? this.cfg.tileScale : 1.0;
+    this.scale = map(this.age, 0, this.life, 1.0, endScale);
 
     // 速度制限
     const sp = sqrt(this.vx * this.vx + this.vy * this.vy);
@@ -109,10 +112,11 @@ class CellParticle {
       py = this.y;
     }
 
+    const drawSize = this.size * this.scale;
     if (this.cfg.tileShape === "circle") {
-      g.circle(px, py, this.size);
+      g.circle(px, py, drawSize);
     } else {
-      g.rect(px, py, this.size, this.size);
+      g.rect(px, py, drawSize, drawSize);
     }
   }
 }
