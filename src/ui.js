@@ -90,7 +90,7 @@ function initTweakpane() {
   flow.addBinding(PARAMS, "flowFreq", {
     label: "Frequency",
     min: 0.001,
-    max: 0.2,
+    max: 0.3,
     step: 0.001,
   });
   flow.addBinding(PARAMS, "flowTwist", {
