@@ -383,7 +383,7 @@ function getCurrentImageBaseName() {
     const name = parts[parts.length - 1] || PARAMS.imgPath;
     return stripExtension(name);
   }
-  return "DriftMask";
+  return "Mask Drift ML5";
 }
 
 function stripExtension(name) {
