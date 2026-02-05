@@ -7,16 +7,17 @@ URL: https://ogrew.github.io/p5-bodymask-drift/
 ## Parameters
 
 ### Tiles
-- Cell Size (px) (1–50): タイルのサイズ。小さいほど密度が上がります。
+- Cell Size (px) (1–24): タイルのサイズ。小さいほど密度が上がります。
 - Tile Shape: Rectangle / Circle。タイルの形状。
 - Tile Opacity (0.0–1.0): タイルの透明度。
+- Tile Scale (end) (0.0–3.0): 終了時のタイルスケール。
 
 ### Motion
 - Frames (steps): アニメーションのステップ数（描画フレーム数）。
-- Max Speed (1.0–10.0): パーティクルの最大速度。
+- Max Speed (0.1–5.0): パーティクルの最大速度。
 
 ### Flow Field
-- Frequency (0.001–0.1): ノイズの周波数（流れの細かさ）。
+- Frequency (0.001–0.3): ノイズの周波数（流れの細かさ）。
 - Twist (0.1–10.0): 流れの回転量（ねじれ強度）。
 - Z Speed (0.001–1.0): 時間方向の進み（流れの変化速度）。
 
