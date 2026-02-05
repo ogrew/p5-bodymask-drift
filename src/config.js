@@ -31,10 +31,10 @@ const PARAM_DEFAULTS = {
   imgSource: "sample",
   imgPath: DEFAULT_SAMPLE_PATH,
 
-  cellSize: 6,
+  cellSize: 5,
   tileShape: "rect",
   moveFrames: 120,
-  maxSpeed: 1.6,
+  maxSpeed: 1.5,
   snapToGrid: true,
   applyToPerson: true,
 
